@@ -6,8 +6,6 @@ import (
 	"runtime"
 	"testing"
 
-	"github.com/danyel/dot-files/configuration"
-	"github.com/danyel/dot-files/yaml_parser"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -23,7 +21,7 @@ func TestYamlParser(t *testing.T) {
 	t.Logf("Starting test YAMLParser")
 	_, filename, _, _ := runtime.Caller(0)
 	dir := filepath.Join(filepath.Dir(filename), "test_files")
-	config := configuration.DotFileConfiguration{
+	config := DotFileConfiguration{
 		Project:        "application",
 		ConfigFileName: "config.yml",
 		GetHomeDirFunc: func() (string, error) {
@@ -31,14 +29,14 @@ func TestYamlParser(t *testing.T) {
 		},
 	}
 
-	data, err := os.ReadFile(configuration.ConstructPath(config))
+	data, err := os.ReadFile(ConstructPath(config))
 
 	if err != nil {
 		t.Fatal(err)
 	}
 	t.Logf("✅ Successfully read file (%d bytes)", len(data))
 
-	appConfig, err := yaml_parser.Parser[AppConfig]{}.Parse(string(data))
+	appConfig, err := YamlParser[AppConfig]{}.Parse(string(data))
 	require.NoError(t, err)
 	assert.Equal(t, appConfig.NetworkConfiguration.Host, "localhost")
 	assert.Equal(t, appConfig.NetworkConfiguration.Port, 8080)
