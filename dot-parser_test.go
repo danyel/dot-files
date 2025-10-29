@@ -6,41 +6,42 @@ import (
 	"runtime"
 	"testing"
 
+	"github.com/danyel/dot-files/configuration"
+	"github.com/danyel/dot-files/yaml_parser"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"gopkg.in/yaml.v3"
 )
 
 type AppConfig struct {
-	Host string `yaml:"host"`
-	Port int    `yaml:"port"`
-}
-
-type YAMLParser struct{}
-
-func (YAMLParser) Parse(content string) (AppConfig, error) {
-	var cfg AppConfig
-	err := yaml.Unmarshal([]byte(content), &cfg)
-
-	return cfg, err
+	NetworkConfiguration struct {
+		Host string `yaml:"host"`
+		Port int    `yaml:"port"`
+	} `yaml:"network"`
 }
 
 func TestYamlParser(t *testing.T) {
 	t.Logf("Starting test YAMLParser")
 	_, filename, _, _ := runtime.Caller(0)
-	dir := filepath.Dir(filename)
-	path := filepath.Join(dir, "test_files", "config.yml")
-	data, err := os.ReadFile(path)
+	dir := filepath.Join(filepath.Dir(filename), "test_files")
+	config := configuration.DotFileConfiguration{
+		Project:        "application",
+		ConfigFileName: "config.yml",
+		GetHomeDirFunc: func() (string, error) {
+			return dir, nil
+		},
+	}
+
+	data, err := os.ReadFile(configuration.ConstructPath(config))
 
 	if err != nil {
-		t.Fatalf("Error reading file: %v", err)
+		t.Fatal(err)
 	}
 	t.Logf("✅ Successfully read file (%d bytes)", len(data))
 
-	appConfig, err := YAMLParser{}.Parse(string(data))
+	appConfig, err := yaml_parser.Parser[AppConfig]{}.Parse(string(data))
 	require.NoError(t, err)
-	assert.Equal(t, appConfig.Host, "localhost")
-	assert.Equal(t, appConfig.Port, 8080)
+	assert.Equal(t, appConfig.NetworkConfiguration.Host, "localhost")
+	assert.Equal(t, appConfig.NetworkConfiguration.Port, 8080)
 
 	t.Logf("Test for finished")
 }
