@@ -26,6 +26,5 @@ func ReadConfig[T any](parser DotFileParser[T], configFile configuration.DotFile
 	if err != nil {
 		return zero, err
 	}
-	log.Printf("data is parsed as %v", result)
 	return result, nil
 }
